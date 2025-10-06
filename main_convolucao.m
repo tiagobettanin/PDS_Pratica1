@@ -1,13 +1,9 @@
-% Script Principal da Atividade Prática 1 - PARTE 6: EFEITOS POR CONVOLUÇÃO
-
 clear all;
 close all;
 clc;
 
-% --- Parâmetros Globais ---
 fs = 44100;
 
-%% --- 1. GERAÇÃO DAS FONTES DE ÁUDIO ---
 fprintf('--- 1. Gerando/Carregando fontes de áudio para os testes ---\n');
 
 % Fonte 1: Melodia Sintética
@@ -19,8 +15,6 @@ for i = 1:4
 end
 disp('Tocando melodia sintética...'); sound(x_melodia, fs); pause(length(x_melodia)/fs + 0.5);
 
-% Fontes 2 e 3: Carregando arquivos .wav (coloque-os na mesma pasta)
-% Se os arquivos não existirem, o script irá gerar simulações
 try
     [x_guitarra, fs_g] = audioread('guitar.wav');
     if fs_g ~= fs, x_guitarra = resample(x_guitarra, fs, fs_g); end
@@ -54,11 +48,9 @@ disp('Tocando voz...'); sound(x_voz, fs); pause(length(x_voz)/fs + 0.5);
 %% --- 2. GERAÇÃO DAS RESPOSTAS AO IMPULSO (h[n]) ---
 fprintf('\n--- 2. Gerando as Respostas ao Impulso (Filtros) ---\n');
 
-% Parte 6.1: Filtros Clássicos
 h_reverb = gera_h_reverb(5, fs * 0.5, fs);
 h_eco = gera_h_multieco(0.5, 0.25, 5, fs); 
 
-% Parte 6.2: Filtros Experimentais (carregue seus .wav aqui)
 try
     [h_palma, fs_p] = audioread('palma.wav');
     if fs_p ~= fs, h_palma = resample(h_palma, fs, fs_p); end
@@ -71,18 +63,29 @@ catch
     h_palma = h_palma / max(abs(h_palma));
 end
 
-% Adicione aqui o carregamento dos seus outros dois áudios experimentais
-% (metal.wav, madeira.wav), ou use as simulações abaixo:
+try
+    [h_metal, fs_p] = audioread('metal.wav');
+    if fs_p ~= fs, h_metal = resample(h_metal, fs, fs_p); end
+    h_metal = h_metal(:,1)'; h_metal = h_metal / max(abs(h_metal));
+    disp('IR experimental "metal.wav" carregada.');
+catch
+    disp('IR "metal.wav" não encontrada. Gerando simulação...');
+    t_exp = 0:1/fs:0.8;
+    h_metal = (sin(2*pi*2500*t_exp) + sin(2*pi*4100*t_exp)) .* exp(-10*t_exp);
+    h_metal = h_metal / max(abs(h_metal));
+end
 
-% Simulação de 'metal.wav'
-t_exp = 0:1/fs:0.8;
-h_metal = (sin(2*pi*2500*t_exp) + sin(2*pi*4100*t_exp)) .* exp(-10*t_exp);
-h_metal = h_metal / max(abs(h_metal));
-
-% Simulação de 'madeira.wav'
-t_exp = 0:1/fs:0.3;
-h_madeira = sin(2*pi*300*t_exp) .* exp(-50*t_exp);
-h_madeira = h_madeira / max(abs(h_madeira));
+try
+    [h_madeira, fs_p] = audioread('madeira.wav');
+    if fs_p ~= fs, h_madeira = resample(h_madeira, fs, fs_p); end
+    h_madeira = h_madeira(:,1)'; h_madeira = h_madeira / max(abs(h_madeira));
+    disp('IR experimental "madeira.wav" carregada.');
+catch
+    disp('IR "madeira.wav" não encontrada. Gerando simulação...');
+    t_exp = 0:1/fs:0.3;
+    h_madeira = sin(2*pi*300*t_exp) .* exp(-50*t_exp);
+    h_madeira = h_madeira / max(abs(h_madeira));
+end
 
 disp('Respostas ao impulso geradas/carregadas. Pressione uma tecla para iniciar a convolução...');
 pause;
@@ -114,4 +117,5 @@ for i = 1:length(fontes)
         subplot(2,1,2); plot(t_plot, y); title('Sinal com Efeito'); grid on;
     end
 end
+
 fprintf('\n--- FIM DO SCRIPT DA PARTE 6 ---\n');
